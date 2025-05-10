@@ -10,8 +10,6 @@ import logging
 import u_get_usb_ports
 import time
 
-ltypes = []  # tracks the type of laser
-
 
 class ConnectionUsbReadWrite:
     SET_CMD_QUERY = bytes([0xA0])
@@ -40,7 +38,6 @@ class ConnectionUsbReadWrite:
         self.connection = None
         self.logger = logger
         self.run_continuously = True
-        self.sending_command = False
         self.is_protocol_laser = is_protocol_laser
         self.is_paused = False
 
@@ -121,9 +118,7 @@ class ConnectionUsbReadWrite:
                 usb.util.claim_interface(self.connection, 0)
 
                 if is_connection_open:
-                    msg_out = "Successfully connected to USB Vendor_ID: {v}, Product_ID:{p}, Bus:{b}, Address{a}".format(
-                        v=self.vendor_id, p=self.product_id, b=self.bus, a=self.address
-                    )
+                    msg_out = "Successfully connected to USB Vendor_ID: {self.vendor_id}, Product_ID:{self.product_id}, Bus:{self.bus}, Address:{self.address}"
                     if self.logger:
                         self.logger.log.info(msg_out)
 
@@ -134,12 +129,7 @@ class ConnectionUsbReadWrite:
 
                 num_attempts += 1
                 if num_attempts <= self.retries:
-                    msg_out = "Retrying connection to USB Vendor_ID={v}, Product_ID={p}. Attempt {num} of {max}".format(
-                        v=self.vendor_id,
-                        p=self.product_id,
-                        num=num_attempts,
-                        max=self.retries,
-                    )
+                    msg_out = "Retrying connection to USB Vendor_ID={self.vendor_id}, Product_ID={self.product_id}. Attempt {num_attempts} of {self.retries}"
                     print(msg_out)
                     if self.logger:
                         self.logger.log.warning(msg_out)
@@ -148,8 +138,8 @@ class ConnectionUsbReadWrite:
     def read_usb(self, timeout, include_first_byte=False):
         try:
             data = self.connection.read(0x81, 64, timeout)
-        except usb.core.USBError as e:
-            print("Error reading response: {}: {}".format(e.args, str(timeout)))
+        except usb.core.USBError:
+            print("Error reading response: {e.args}: {str(timeout)}")
             return None
 
         if include_first_byte:
@@ -163,7 +153,6 @@ class ConnectionUsbReadWrite:
     def send_my_command(
         self, cmd, is_log_cmd, is_initialization_cmd=False, writeOnly=False
     ):
-        self.sending_command = True
         response = None
         workflow_timeout = 0.05
         stripped_cmd = cmd.replace("\r\n", "").lower()
@@ -210,14 +199,11 @@ class ConnectionUsbReadWrite:
         except usb.core.USBError as e:
             print(repr(e.args))
 
-        self.sending_command = False
-
 
 if __name__ == "__main__":
     my_connection = []
     devices = u_get_usb_ports.get_usb_ports()
     lasers = list()
-    print(lasers)
     if devices:
         for device in devices:
             if devices[device]["is_manager"]:
@@ -239,9 +225,8 @@ if __name__ == "__main__":
             is_protocol_laser=True,
         )
         my_connection.append(new_connection)
-        ltypes.append("stradus")
         is_open = my_connection[x].open_connection()
-        print("IS CONNECTION OPEN: {}".format(is_open))
+        print("IS CONNECTION OPEN: {is_open}")
         r = my_connection[x].send_my_command(
             cmd="LE=1\r\n",
             is_log_cmd=False,

@@ -43,11 +43,10 @@ def get_usb_ports():
         bus, address = parse_bus_and_address(line)
 
         if bus and address:
-            unique_name = "usb_{}_{}_{}_{}".format(
-                MANAGER_VENDOR_ID, MANAGER_PRODUCT_ID, bus, address
+            unique_name = (
+                f"usb_{MANAGER_VENDOR_ID}_{MANAGER_PRODUCT_ID}_{bus}_{address}"
             )
             found_vortran_devices[unique_name] = dict()
-
             found_vortran_devices[unique_name]["vendor_id"] = MANAGER_VENDOR_ID
             found_vortran_devices[unique_name]["product_id"] = MANAGER_PRODUCT_ID
             found_vortran_devices[unique_name]["bus"] = bus
@@ -67,9 +66,7 @@ def get_usb_ports():
         bus, address = parse_bus_and_address(line)
         emulation = False
         if bus and address:
-            unique_name = "usb_{}_{}_{}_{}".format(
-                LASER_VENDOR_ID, LASER_PRODUCT_ID, bus, address
-            )
+            unique_name = f"usb_{LASER_VENDOR_ID}_{LASER_PRODUCT_ID}_{bus}_{address}"
             found_vortran_devices[unique_name] = dict()
             found_vortran_devices[unique_name]["vendor_id"] = LASER_VENDOR_ID
             found_vortran_devices[unique_name]["product_id"] = LASER_PRODUCT_ID
@@ -79,9 +76,7 @@ def get_usb_ports():
 
         # Optionally Create a fake laser so we can cook up the GUI - TODO AB
         if emulation:
-            unique_name = "usb_{}_{}_{}_{}".format(
-                "EmuVendID", "EmuProdID", "NoBus", "FakeAddy"
-            )
+            unique_name = "usb_EmuVendID_EmuProdID_NoBus_FakeAddy"
             found_vortran_devices[unique_name] = dict()
             found_vortran_devices[unique_name]["vendor_id"] = LASER_VENDOR_ID
             found_vortran_devices[unique_name]["product_id"] = LASER_PRODUCT_ID
