@@ -18,4 +18,15 @@ If you don't have python already on your system you can install it using [uv](ht
 - Note the option for writeOnly. If using as true, the system will issue the command and not check for a reply.
   if false, the system will poll the laser output stream until an acknowledgement is received.
 
+## Development
+
+If you want to contribute, please install and use `pre-commit`.
+
+You can do this by doing
+
+    uv pip install pre-commit
+
+and then running the following command inside the git repo
+
+    pre-commit install
 
