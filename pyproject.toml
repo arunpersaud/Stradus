@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>61", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vortran"
+dynamic = ["version"]
+description = "A Python project to control a Vortran Stradus laser"
+authors = [
+  { name = "Arun Persaud", email = "apersaud@lbl.gov" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["laser", "vortran", "stradus", "control"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: OS Independent"
+]
+
+dependencies = [
+  "usb",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+write_to = "src/vortran/_version.py"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+ignore = ["E741"]
+select = ["UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+docstring-code-line-length = 80
+
+
