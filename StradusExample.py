@@ -1,0 +1,196 @@
+# Votran Stradus Laser Example by Vortran Tehnologies @ 2024
+# Example was developed using Python 3.11
+# Please see Readme.txt
+
+import platform
+import usb.core
+import usb.backend.libusb1
+import array
+import logging
+import u_get_usb_ports
+import time
+
+ltypes = []  # tracks the type of laser
+
+class ConnectionUsbReadWrite:
+    SET_CMD_QUERY = bytes([0xA0])
+    GET_RESPONSE_STATUS = bytes([0xA1])
+    GET_RESPONSE = bytes([0xA2])
+    SET_RESPONSE_RECEIVED = bytes([0xA3])
+
+    def __init__(self, vendor_id, product_id, bus, address, timeout, retries=1, logger=None, is_protocol_laser=True):
+        self.vendor_id = vendor_id
+        self.product_id = product_id
+        self.bus = bus
+        self.address = address
+        self.read_timeout = 40
+        self.write_timeout = 0
+        self.retries = retries
+        self.connection = None
+        self.logger = logger
+        self.run_continuously = True
+        self.sending_command = False
+        self.is_protocol_laser = is_protocol_laser
+        self.is_paused = False
+
+        # DEFINE EMPTY COMMANDS USED FOR GETTING STATUS AND READING RESPONSE
+        self.prefix_1 = bytearray(self.SET_CMD_QUERY)
+        prefix_2 = bytearray(self.GET_RESPONSE_STATUS)
+        prefix_3 = bytearray(self.GET_RESPONSE)
+        prefix_4 = bytearray(self.SET_RESPONSE_RECEIVED)
+        padding_empty = bytearray([0xFF] * 63)
+        full_data_2 = prefix_2 + padding_empty
+        full_data_3 = prefix_3 + padding_empty
+        full_data_4 = prefix_4 + padding_empty
+        self.data_in_array_2 = array.array('B', full_data_2)
+        self.data_in_array_3 = array.array('B', full_data_3)
+        self.data_in_array_4 = array.array('B', full_data_4)
+
+        # SETUP LOGGER TO CONSOLE
+        log_format = '%(message)s'
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(log_format))
+        self.console_logger = logging.getLogger('console_logger')
+        self.console_logger.setLevel(logging.INFO)
+        self.console_logger.addHandler(handler)
+
+    def open_connection(self):
+        is_connection_open = False
+        num_attempts = 0
+
+        while not is_connection_open and num_attempts <= self.retries:
+            try:
+                # WINDOWS
+                if platform.system() == 'Windows':
+                    arch = platform.architecture()
+                    if arch[0] == '32bit':
+                        backend = usb.backend.libusb1.get_backend(find_library=lambda x: "USB/libusb/x86/libusb-1.0.dll")
+                    elif arch[0] == '64bit':
+                        backend = usb.backend.libusb1.get_backend(find_library=lambda x: "USB/libusb/x64/libusb-1.0.dll")
+                    else:
+                        raise Exception('Invalid platform. System must be a 32bit or 64bit architecture.')
+
+                    self.connection = usb.core.find(backend=backend, idVendor=self.vendor_id, idProduct=self.product_id,
+                                                    bus=self.bus, address=self.address)
+                elif platform.system() == 'Linux':
+                    self.connection = usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id, bus=self.bus,
+                                                    address=self.address)
+                    if self.connection.is_kernel_driver_active(0):
+                        self.connection.detach_kernel_driver(0)
+                else:
+                    self.connection = usb.core.find(idVendor=self.vendor_id, idProduct=self.product_id, bus=self.bus,
+                                                    address=self.address)
+
+                if self.connection is None:
+                    raise ValueError
+                else:
+                    is_connection_open = True
+
+                self.connection.reset()
+                self.connection.set_configuration()
+                usb.util.claim_interface(self.connection, 0)
+
+                if is_connection_open:
+                    msg_out = 'Successfully connected to USB Vendor_ID: {v}, Product_ID:{p}, Bus:{b}, Address{a}'.format(
+                        v=self.vendor_id, p=self.product_id, b=self.bus, a=self.address)
+                    if self.logger:
+                        self.logger.log.info(msg_out)
+
+            except Exception as e:
+                print(repr(e))
+                if self.logger:
+                    self.logger.log.error(repr(e))
+
+                num_attempts += 1
+                if num_attempts <= self.retries:
+                    msg_out = 'Retrying connection to USB Vendor_ID={v}, Product_ID={p}. Attempt {num} of {max}'.format(
+                        v=self.vendor_id, p=self.product_id, num=num_attempts, max=self.retries)
+                    print(msg_out)
+                    if self.logger:
+                        self.logger.log.warning(msg_out)
+        return is_connection_open
+
+    def read_usb(self, timeout, include_first_byte=False):
+        try:
+            data = self.connection.read(0x81, 64, timeout)
+        except usb.core.USBError as e:
+            print("Error reading response: {}: {}".format(e.args, str(timeout)))
+            return None
+
+        if include_first_byte:
+            byte_str = ''.join(chr(n) for n in data[0:])
+        else:
+            byte_str = ''.join(chr(n) for n in data[1:])
+
+        result_str = byte_str.replace('\x00', '')
+        return result_str if result_str else None
+
+    def send_my_command(self, cmd, is_log_cmd, is_initialization_cmd=False, writeOnly=False):
+        self.sending_command = True
+        t_start = time.time()
+        response = None
+        workflow_timeout = 0.05
+        stripped_cmd = cmd.replace('\r\n', '').lower()
+        try:
+            response = self.read_usb(30)
+            if self.is_protocol_laser:
+                data = bytearray(cmd, 'ascii')
+                padding = bytearray([0xFF] * (63 - len(cmd)))
+                full_data = self.prefix_1 + data + padding
+                data_in_array_1 = array.array('B', full_data)
+
+                self.connection.ctrl_transfer(0x21, 0x09, 0x200, 0x00, data_in_array_1)
+                cmd_sent_time = time.time()
+                while time.time() - cmd_sent_time < workflow_timeout:
+                    self.connection.ctrl_transfer(0x21, 0x09, 0x200, 0x00, self.data_in_array_2)
+                    status_confirmed = self.read_usb(self.read_timeout, include_first_byte=True)
+                    if status_confirmed and chr(0x01) + chr(0xFF) in status_confirmed:
+                        if writeOnly:
+                            return "OK"
+                        if not writeOnly:
+                            break
+                    time.sleep(.005)
+
+                self.connection.ctrl_transfer(0x21, 0x09, 0x200, 0x00, self.data_in_array_3)
+                sent_time = time.time()
+                response = ""
+                while time.time() - sent_time < 1:
+                    response = self.read_usb(self.read_timeout)
+                    if response and ('\n' in response or stripped_cmd in response.lower()):
+                        self.connection.ctrl_transfer(0x21, 0x09, 0x200, 0x00, self.data_in_array_4)
+                        break
+                return response
+
+        except usb.core.USBError as e:
+            print(repr(e.args))
+
+        self.sending_command = False
+
+if __name__ == "__main__":
+
+    my_connection = []
+    devices = u_get_usb_ports.get_usb_ports()
+    lasers = list()
+    print(lasers)
+    if devices:
+        for device in devices:
+            if devices[device]['is_manager']:
+                manager = device
+            else:
+                lasers.append(device)
+                print('Attaching Endpoint', device)
+
+    my_timeout = 500
+    my_retries = 0
+    for x in range(len(lasers)):
+        new_connection = ConnectionUsbReadWrite(devices[lasers[x]]['vendor_id'],
+                                                devices[lasers[x]]['product_id'],
+                                                devices[lasers[x]]['bus'],
+                                                devices[lasers[x]]['address'],
+                                                my_timeout, my_retries, is_protocol_laser=True)
+        my_connection.append(new_connection)
+        ltypes.append('stradus')
+        is_open = my_connection[x].open_connection()
+        print('IS CONNECTION OPEN: {}'.format(is_open))
+        r = my_connection[x].send_my_command(cmd='LE=1\r\n',is_log_cmd=False,is_initialization_cmd=False, writeOnly=False)
+        print(r)
