@@ -180,3 +180,29 @@ class Laser(USB_ReadWrite):
     def rated_power(self):
         self.send_usb("?RP")
         return self.read_usb(timeout=1)
+
+
+def get_lasers():
+    connections = []
+
+    devices = get_usb_ports()
+    lasers = []
+    if devices:
+        for device in devices:
+            if devices[device]["is_manager"]:
+                manager = device
+            else:
+                lasers.append(device)
+                print("Attaching Endpoint", device)
+
+    my_timeout = 500
+    my_retries = 0
+    for laser in lasers:
+        new_connection = Laser(
+            devices[laser],
+            my_timeout,
+            my_retries,
+            is_protocol_laser=True,
+        )
+        connections.append(new_connection)
+    return connections
