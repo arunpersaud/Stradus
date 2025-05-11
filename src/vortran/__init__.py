@@ -1,2 +1,2 @@
-from u_get_usb_ports import get_usb_ports
-from ConnectionUsbReadWrite import ConnectionUsbReadWrite
+from .usb import get_usb_ports
+from .usb_connection import USB_ReadWrite

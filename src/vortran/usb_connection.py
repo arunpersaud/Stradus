@@ -7,11 +7,12 @@ import usb.core
 import usb.backend.libusb1
 import array
 import logging
-import u_get_usb_ports
 import time
 
+from .usb import VortranDevice
 
-class ConnectionUsbReadWrite:
+
+class USB_ReadWrite:
     SET_CMD_QUERY = bytes([0xA0])
     GET_RESPONSE_STATUS = bytes([0xA1])
     GET_RESPONSE = bytes([0xA2])
@@ -19,19 +20,16 @@ class ConnectionUsbReadWrite:
 
     def __init__(
         self,
-        vendor_id,
-        product_id,
-        bus,
-        address,
+        laser: VortranDevice,
         timeout,
         retries=1,
         logger=None,
         is_protocol_laser=True,
     ):
-        self.vendor_id = vendor_id
-        self.product_id = product_id
-        self.bus = bus
-        self.address = address
+        self.vendor_id = laser.vendor_id
+        self.product_id = laser.product_id
+        self.bus = laser.bus
+        self.address = laser.address
         self.read_timeout = 40
         self.write_timeout = 0
         self.retries = retries
@@ -150,11 +148,11 @@ class ConnectionUsbReadWrite:
         result_str = byte_str.replace("\x00", "")
         return result_str if result_str else None
 
-    def send_my_command(
-        self, cmd, is_log_cmd, is_initialization_cmd=False, writeOnly=False
-    ):
+    def send_usb(self, cmd, writeOnly=False):
         response = None
         workflow_timeout = 0.05
+        if not cmd.endswith("\r\n"):
+            cmd = cmd + "\r\n"
         stripped_cmd = cmd.replace("\r\n", "").lower()
         try:
             response = self.read_usb(30)

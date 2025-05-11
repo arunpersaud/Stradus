@@ -1,10 +1,24 @@
+from dataclasses import dataclass
 import usb.core
 import usb.backend.libusb1
 import re
 import platform
 
 
+@dataclass
+class VortranDevice:
+    """Specify all USB values needed to talk to a Vortran laser."""
+
+    vendor_id: int
+    product_id: int
+    bus: int
+    address: int
+    is_manager: bool = False
+
+
 def get_usb_ports():
+    """Find all usb lasers."""
+
     # DEFINE IDS TO LOOK FOR
     LASER_VENDOR_ID = 0x201A
     LASER_PRODUCT_ID = 0x1001
@@ -46,12 +60,13 @@ def get_usb_ports():
             unique_name = (
                 f"usb_{MANAGER_VENDOR_ID}_{MANAGER_PRODUCT_ID}_{bus}_{address}"
             )
-            found_vortran_devices[unique_name] = dict()
-            found_vortran_devices[unique_name]["vendor_id"] = MANAGER_VENDOR_ID
-            found_vortran_devices[unique_name]["product_id"] = MANAGER_PRODUCT_ID
-            found_vortran_devices[unique_name]["bus"] = bus
-            found_vortran_devices[unique_name]["address"] = address
-            found_vortran_devices[unique_name]["is_manager"] = True
+            found_vortran_devices[unique_name] = VortranDevice(
+                vendor_id=MANAGER_VENDOR_ID,
+                product_id=MANAGER_PRODUCT_ID,
+                bus=bus,
+                address=address,
+                is_manager=True,
+            )
 
     # FIND LASERS
     found_info = usb.core.show_devices(
@@ -67,26 +82,30 @@ def get_usb_ports():
         emulation = False
         if bus and address:
             unique_name = f"usb_{LASER_VENDOR_ID}_{LASER_PRODUCT_ID}_{bus}_{address}"
-            found_vortran_devices[unique_name] = dict()
-            found_vortran_devices[unique_name]["vendor_id"] = LASER_VENDOR_ID
-            found_vortran_devices[unique_name]["product_id"] = LASER_PRODUCT_ID
-            found_vortran_devices[unique_name]["bus"] = bus
-            found_vortran_devices[unique_name]["address"] = address
-            found_vortran_devices[unique_name]["is_manager"] = False
+            found_vortran_devices[unique_name] = VortranDevice(
+                vendor_id=LASER_VENDOR_ID,
+                product_id=LASER_PRODUCT_ID,
+                bus=bus,
+                address=address,
+                is_manager=False,
+            )
 
         # Optionally Create a fake laser so we can cook up the GUI - TODO AB
         if emulation:
             unique_name = "usb_EmuVendID_EmuProdID_NoBus_FakeAddy"
-            found_vortran_devices[unique_name] = dict()
-            found_vortran_devices[unique_name]["vendor_id"] = LASER_VENDOR_ID
-            found_vortran_devices[unique_name]["product_id"] = LASER_PRODUCT_ID
-            found_vortran_devices[unique_name]["bus"] = bus
-            found_vortran_devices[unique_name]["address"] = address
-            found_vortran_devices[unique_name]["is_manager"] = False
+            found_vortran_devices[unique_name] = VortranDevice(
+                vendor_id=LASER_VENDOR_ID,
+                product_id=LASER_PRODUCT_ID,
+                bus=bus,
+                address=address,
+                is_manager=False,
+            )
     return found_vortran_devices
 
 
-def parse_bus_and_address(text):
+def parse_bus_and_address(text: str) -> (int, int):
+    """Get the bus and address from the usb string."""
+
     # TRY TO FIND BUS AND ADDRESS
     tmp_match_bus = re.match(".*Bus (.*) Address.*", text)
     tmp_match_address = re.match(".*Address (.*), Spec.*", text)
@@ -108,6 +127,3 @@ def parse_bus_and_address(text):
             except ValueError:
                 print("Unable to get a bus in utility get_usb_ports")
     return bus, address
-
-
-found = get_usb_ports()
