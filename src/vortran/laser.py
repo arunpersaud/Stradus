@@ -22,10 +22,10 @@ class LaserStatus(IntFlag):
 
 
 class Laser(USB_ReadWrite):
-    def set_power_control_mode(self):
+    def enable_power_control_mode(self):
         self.send_usb("C=0")
 
-    def set_current_control_mode(self):
+    def enable_current_control_mode(self):
         self.send_usb("C=1")
 
     @property
@@ -80,7 +80,7 @@ class Laser(USB_ReadWrite):
         self.send_usb("?LP")
         return self.read_usb(timeout=1)
 
-    @current.setter
+    @power.setter
     def power(self, value):
         self.send_usb("LP={value:05.1f}")
 
@@ -89,7 +89,7 @@ class Laser(USB_ReadWrite):
         self.send_usb("?PP")
         return self.read_usb(timeout=1)
 
-    @current.setter
+    @pulse_power.setter
     def pulse_power(self, value):
         self.send_usb("PP={value:05.1f}")
 
