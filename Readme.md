@@ -4,6 +4,10 @@
 
 If you don't have python already on your system you can install it using [uv](https://docs.astral.sh/uv/#installation).
 
+Install the package using uv direclty from the clonsed git repository:
+
+    uv pip install -e .
+
 ## Use
 
 - System will use the first laser found. If your intent is to use more than 1 laser, please edit the section containing:
