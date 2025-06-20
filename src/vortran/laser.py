@@ -65,10 +65,10 @@ class Laser(USB_ReadWrite):
         self.send_usb("LC={value:05.1f}")
 
     def on(self):
-        self.send_ubs("LE=1")
+        self.send_usb("LE=1")
 
     def off(self):
-        self.send_ubs("LE=0")
+        self.send_usb("LE=0")
 
     @property
     def on_off(self):

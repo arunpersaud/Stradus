@@ -9,7 +9,8 @@ import array
 import logging
 import time
 
-from .usb import VortranDevice
+#from .usb import VortranDevice
+from .usb import *
 
 
 class USB_ReadWrite:

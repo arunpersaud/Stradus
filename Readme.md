@@ -15,7 +15,7 @@ The code below shows how to use the package (note: currently not tested)
 ```python
 import vortran
 
-lasers = votran.get_lasers()
+lasers = vortran.get_lasers()
 
 laser = lasers[0]
 
