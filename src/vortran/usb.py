@@ -1,6 +1,9 @@
 from dataclasses import dataclass
+
+# Note: these are imports from pyusb
 import usb.core
 import usb.backend.libusb1
+
 import re
 import platform
 
