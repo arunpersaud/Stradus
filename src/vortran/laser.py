@@ -1,6 +1,7 @@
 from enum import IntFlag
 
 from .usb_connection import USB_ReadWrite
+from .usb import get_usb_ports
 
 
 class LaserStatus(IntFlag):
@@ -189,7 +190,7 @@ def get_lasers():
     lasers = []
     if devices:
         for device in devices:
-            if devices[device]["is_manager"]:
+            if devices[device].is_manager:
                 manager = device
             else:
                 lasers.append(device)
