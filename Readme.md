@@ -19,8 +19,12 @@ lasers = vortran.get_lasers()
 
 laser = lasers[0]
 
+is_open = laser.open_connection()
+
 laser.enable_power_control_mode()
 laser.power = 50
+
+base_temp = laser.base_plate_temperature
 
 laser.on()
 time.sleep(1)
