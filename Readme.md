@@ -4,7 +4,7 @@
 
 If you don't have python already on your system you can install it using [uv](https://docs.astral.sh/uv/#installation).
 
-Install the package using uv direclty from the clonsed git repository:
+Install the package using uv directly from the cloned git repository:
 
     uv pip install -e .
 
