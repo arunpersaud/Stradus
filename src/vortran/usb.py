@@ -106,7 +106,7 @@ def get_usb_ports():
     return found_vortran_devices
 
 
-def parse_bus_and_address(text: str) -> (int, int):
+def parse_bus_and_address(text: str) -> tuple[int, int]:
     """Get the bus and address from the usb string."""
 
     # TRY TO FIND BUS AND ADDRESS
@@ -129,4 +129,5 @@ def parse_bus_and_address(text: str) -> (int, int):
                 address = int(tmp_match_address.groups()[0])
             except ValueError:
                 print("Unable to get a bus in utility get_usb_ports")
+
     return bus, address
