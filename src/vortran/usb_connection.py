@@ -9,7 +9,8 @@ import array
 import logging
 import time
 
-from .usb import VortranDevice
+# from .usb import VortranDevice
+from .usb import *
 
 
 class USB_ReadWrite:
@@ -21,7 +22,7 @@ class USB_ReadWrite:
     def __init__(
         self,
         laser: VortranDevice,
-        timeout,
+        timeout,  # Why is this here?
         retries=1,
         logger=None,
         is_protocol_laser=True,
@@ -71,11 +72,11 @@ class USB_ReadWrite:
                     arch = platform.architecture()
                     if arch[0] == "32bit":
                         backend = usb.backend.libusb1.get_backend(
-                            find_library=lambda x: "USB/libusb/x86/libusb-1.0.dll"
+                            find_library=lambda: "USB/libusb/x86/libusb-1.0.dll"
                         )
                     elif arch[0] == "64bit":
                         backend = usb.backend.libusb1.get_backend(
-                            find_library=lambda x: "USB/libusb/x64/libusb-1.0.dll"
+                            find_library=lambda: "USB/libusb/x64/libusb-1.0.dll"
                         )
                     else:
                         raise Exception(
@@ -137,7 +138,7 @@ class USB_ReadWrite:
         try:
             data = self.connection.read(0x81, 64, timeout)
         except usb.core.USBError:
-            print("Error reading response: {e.args}: {str(timeout)}")
+            print(f"Error reading response: {e.args}: {str(timeout)}")
             return None
 
         if include_first_byte:
@@ -153,9 +154,11 @@ class USB_ReadWrite:
         workflow_timeout = 0.05
         if not cmd.endswith("\r\n"):
             cmd = cmd + "\r\n"
-        stripped_cmd = cmd.replace("\r\n", "").lower()
+        stripped_cmd = (
+            cmd.replace("\r\n", "").lower()
+        )  # This part doesn't make sense given how the example code calls commands.
         try:
-            response = self.read_usb(30)
+            response = self.read_usb(timeout=30)
             if self.is_protocol_laser:
                 data = bytearray(cmd, "ascii")
                 padding = bytearray([0xFF] * (63 - len(cmd)))

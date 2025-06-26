@@ -4,7 +4,7 @@
 
 If you don't have python already on your system you can install it using [uv](https://docs.astral.sh/uv/#installation).
 
-Install the package using uv direclty from the clonsed git repository:
+Install the package using uv directly from the cloned git repository:
 
     uv pip install -e .
 
@@ -15,12 +15,16 @@ The code below shows how to use the package (note: currently not tested)
 ```python
 import vortran
 
-lasers = votran.get_lasers()
+lasers = vortran.get_lasers()
 
 laser = lasers[0]
 
+is_open = laser.open_connection()
+
 laser.enable_power_control_mode()
 laser.power = 50
+
+base_temp = laser.base_plate_temperature
 
 laser.on()
 time.sleep(1)
