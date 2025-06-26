@@ -154,7 +154,9 @@ class USB_ReadWrite:
         workflow_timeout = 0.05
         if not cmd.endswith("\r\n"):
             cmd = cmd + "\r\n"
-        stripped_cmd = cmd.replace("\r\n", "").lower()
+        stripped_cmd = (
+            cmd.replace("\r\n", "").lower()
+        )  # This part doesn't make sense given how the example code calls commands.
         try:
             response = self.read_usb(timeout=30)
             if self.is_protocol_laser:
