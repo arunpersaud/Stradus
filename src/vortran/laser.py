@@ -129,7 +129,7 @@ class Laser(USB_ReadWrite):
         fault = self.read_usb(timeout=1)
         if (
             fault is not None
-            and verify_result(fault, "?FC") == True
+            and verify_result(fault, ["?FC"]) == True
             and parse_output(fault) is not None
         ):
             result = parse_output(fault)[0]  # type: ignore
@@ -178,7 +178,9 @@ class Laser(USB_ReadWrite):
     @property
     def laser_status(self):
         # self.send_usb("?LS")
-        return parse_output(self.send_query("?LS"))
+        return parse_output(
+            self.send_query("?LS", alt_list=["?C", "?LPS", "?LCS", "?EPC", "?DELAY"])
+        )
 
     @property
     def laser_wavelength(self):
@@ -200,18 +202,28 @@ class Laser(USB_ReadWrite):
         # self.send_usb("?RP")
         return parse_output(self.send_query("?RP"))
 
-    def send_query(self, command: str) -> str | None:
+    def send_query(self, command: str, alt_list: list[str] = []) -> str | None:
         """Sends a query command to the laser and returns the
         result. If the result is None or empty, it tries again before
         returning None.
 
         """
         result = self.send_usb(command)
-        if result is not None and verify_result(result, command) == True:
+        if not alt_list:
+            verify_list = [command]
+        else:
+            verify_list = alt_list
+
+        # print(result)
+        # print(alt_list)
+        if (result is not None) and (verify_result(result, verify_list) == True):
             data = result
         else:  # if result is None or not verified, ask again
+            print("trying second query")
             second_try = self.send_usb(command)
-            if result is not None and verify_result(result, command) == True:
+            if (result is not None) and (
+                verify_result(second_try, verify_list) == True
+            ):
                 data = result
             else:
                 data = None
