@@ -29,13 +29,11 @@ def parse_output(input: str | NoneType) -> list[str] | NoneType:
     return result
 
 
-def verify_result(input: str, command: str) -> bool:
+def verify_result(input: str, command: list[str]) -> bool:
     """Verifies if a response has data by looking for the command
     string inside.
     """
 
-    index = input.find(command)
-
-    result = True if (index != -1) else False
+    result = all(cmd in input for cmd in command)
 
     return result
