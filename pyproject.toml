@@ -22,7 +22,7 @@ classifiers = [
 ]
 
 dependencies = [
-  "usb",
+  "pyusb",
 ]
 
 [tool.setuptools.packages.find]
