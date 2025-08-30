@@ -19,7 +19,7 @@ class VortranDevice:
     is_manager: bool = False
 
 
-def get_usb_ports():
+def get_usb_ports() -> dict[str, VortranDevice]:
     """Find all usb lasers."""
 
     # DEFINE IDS TO LOOK FOR
@@ -106,7 +106,7 @@ def get_usb_ports():
     return found_vortran_devices
 
 
-def parse_bus_and_address(text: str) -> tuple[int, int]:
+def parse_bus_and_address(text: str) -> tuple[int | None, int | None]:
     """Get the bus and address from the usb string."""
 
     # TRY TO FIND BUS AND ADDRESS

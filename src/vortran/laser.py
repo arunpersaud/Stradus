@@ -1,8 +1,8 @@
 from enum import IntFlag
-from types import NoneType
+from typing import Any
 
 from .usb_connection import USB_ReadWrite
-from .usb import get_usb_ports
+from .usb import get_usb_ports, VortranDevice
 from .parser import parse_output, verify_result
 
 
@@ -31,90 +31,90 @@ class Laser(USB_ReadWrite):
 
     """
 
-    def enable_power_control_mode(self):
+    def enable_power_control_mode(self) -> None:
         self.send_usb("C=0")
 
-    def enable_current_control_mode(self):
+    def enable_current_control_mode(self) -> None:
         self.send_usb("C=1")
 
     @property
-    def control_mode(self):
+    def control_mode(self) -> list[str] | None:
         return parse_output(self.send_query("?C"))
 
-    def enable_delay(self):
+    def enable_delay(self) -> None:
         self.send_usb("DELAY=0")
 
-    def disable_delay(self):
+    def disable_delay(self) -> None:
         self.send_usb("DELAY=1")
 
     @property
-    def delay(self):
+    def delay(self) -> list[str] | None:
         return parse_output(self.send_query("?DELAY"))
 
-    def enable_external_power_control(self):
+    def enable_external_power_control(self) -> None:
         self.send_usb("EPC=1")
 
-    def disable_external_power_control(self):
+    def disable_external_power_control(self) -> None:
         self.send_usb("EPC=0")
 
     @property
-    def external_power_control(self):
+    def external_power_control(self) -> list[str] | None:
         return parse_output(self.send_query("?EPC"))
 
     @property
-    def current(self):
+    def current(self) -> list[str] | None:
         return parse_output(self.send_query("?LC"))
 
     @current.setter
-    def current(self, value):
+    def current(self, value: float) -> None:
         self.send_usb(f"LC={value:05.1f}")
 
-    def on(self):
+    def on(self) -> None:
         self.send_usb("LE=1")
 
-    def off(self):
+    def off(self) -> None:
         self.send_usb("LE=0")
 
     @property
-    def on_off(self):
+    def on_off(self) -> list[str] | None:
         return parse_output(self.send_query("?LE"))
 
     @property
-    def power(self):
+    def power(self) -> list[str] | None:
         return parse_output(self.send_query("?LP"))
 
     @power.setter
-    def power(self, value):
+    def power(self, value: float) -> None:
         self.send_usb(f"LP={value:05.1f}")
 
     @property
-    def pulse_power(self):
+    def pulse_power(self) -> list[str] | None:
         return parse_output(self.send_query("?PP"))
 
     @pulse_power.setter
-    def pulse_power(self, value):
+    def pulse_power(self, value: float) -> None:
         self.send_usb(f"PP={value:05.1f}")
 
-    def disable_pulsed_power(self):
+    def disable_pulsed_power(self) -> None:
         self.send_usb("PUL=0")
 
-    def enable_pulsed_power(self):
+    def enable_pulsed_power(self) -> None:
         self.send_usb("PUL=1")
 
     @property
-    def pulsed_power(self):
+    def pulsed_power(self) -> list[str] | None:
         return parse_output(self.send_query("?PUL"))
 
     @property
-    def base_plate_temperature(self):
+    def base_plate_temperature(self) -> list[str] | None:
         return parse_output(self.send_query("?BPT"))
 
     @property
-    def computer_control(self):
+    def computer_control(self) -> list[str] | None:
         return parse_output(self.send_query("?CC"))
 
     @property
-    def fault_code(self):
+    def fault_code(self) -> list[LaserStatus] | None:
         self.send_query("?FC")
         fault = self.read_usb(timeout=1)
         if (
@@ -131,53 +131,53 @@ class Laser(USB_ReadWrite):
             return None
 
     @property
-    def fault_text(self):
+    def fault_text(self) -> list[str] | None:
         return parse_output(self.send_query("?FD"))
 
     @property
-    def firmware_protocal(self):
+    def firmware_protocal(self) -> list[str] | None:
         return parse_output(self.send_query("?FP"))
 
     @property
-    def firmware_version(self):
+    def firmware_version(self) -> list[str] | None:
         return parse_output(self.send_query("?FV"))
 
     @property
-    def interlock_status(self):
+    def interlock_status(self) -> list[str] | None:
         return parse_output(self.send_query("?IL"))
 
     @property
-    def laser_hours(self):
+    def laser_hours(self) -> list[str] | None:
         return parse_output(self.send_query("?LH"))
 
     @property
-    def laser_id(self):
+    def laser_id(self) -> list[str] | None:
         return parse_output(self.send_query("?LI"))
 
     @property
-    def laser_power_setting(self):
+    def laser_power_setting(self) -> list[str] | None:
         return parse_output(self.send_query("?LPS"))
 
     @property
-    def laser_status(self):
+    def laser_status(self) -> list[str] | None:
         return parse_output(
             self.send_query("?LS", alt_list=["?C", "?LPS", "?LCS", "?EPC", "?DELAY"])
         )
 
     @property
-    def laser_wavelength(self):
+    def laser_wavelength(self) -> list[str] | None:
         return parse_output(self.send_query("?LW"))
 
     @property
-    def laser_max_power(self):
+    def laser_max_power(self) -> list[str] | None:
         return parse_output(self.send_query("?MAXP"))
 
     @property
-    def optical_block_temperature(self):
+    def optical_block_temperature(self) -> list[str] | None:
         return parse_output(self.send_query("?OBT"))
 
     @property
-    def rated_power(self):
+    def rated_power(self) -> list[str] | None:
         return parse_output(self.send_query("?RP"))
 
     def send_query(self, command: str, alt_list: list[str] = []) -> str | None:
@@ -209,7 +209,7 @@ class Laser(USB_ReadWrite):
         return data
 
 
-def get_lasers():
+def get_lasers() -> list[Laser]:
     """Returns a list containing possible connections to
     lasers. First laser is index 0 of the return value.
 

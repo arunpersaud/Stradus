@@ -9,8 +9,7 @@ import array
 import logging
 import time
 
-# from .usb import VortranDevice
-from .usb import *
+from .usb import VortranDevice
 
 
 class USB_ReadWrite:
@@ -22,11 +21,11 @@ class USB_ReadWrite:
     def __init__(
         self,
         laser: VortranDevice,
-        timeout,  # Why is this here?
-        retries=1,
+        timeout: int,
+        retries: int = 1,
         logger=None,
-        is_protocol_laser=True,
-    ):
+        is_protocol_laser: bool = True,
+    ) -> None:
         self.vendor_id = laser.vendor_id
         self.product_id = laser.product_id
         self.bus = laser.bus
@@ -61,7 +60,7 @@ class USB_ReadWrite:
         self.console_logger.setLevel(logging.INFO)
         self.console_logger.addHandler(handler)
 
-    def open_connection(self):
+    def open_connection(self) -> bool:
         is_connection_open = False
         num_attempts = 0
 
@@ -134,7 +133,7 @@ class USB_ReadWrite:
                         self.logger.log.warning(msg_out)
         return is_connection_open
 
-    def read_usb(self, timeout, include_first_byte=False):
+    def read_usb(self, timeout: int, include_first_byte: bool = False) -> str | None:
         try:
             data = self.connection.read(0x81, 64, timeout)
         except usb.core.USBError:
@@ -149,7 +148,7 @@ class USB_ReadWrite:
         result_str = byte_str.replace("\x00", "")
         return result_str if result_str else None
 
-    def send_usb(self, cmd, writeOnly=False):
+    def send_usb(self, cmd: str, writeOnly: bool = False) -> str | None:
         response = None
         workflow_timeout = 0.05
         if not cmd.endswith("\r\n"):
