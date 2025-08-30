@@ -71,7 +71,7 @@ class Laser(USB_ReadWrite):
 
     @current.setter
     def current(self, value):
-        self.send_usb("LC={value:05.1f}")
+        self.send_usb(f"LC={value:05.1f}")
 
     def on(self):
         self.send_usb("LE=1")
