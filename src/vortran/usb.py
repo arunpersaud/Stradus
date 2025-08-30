@@ -3,6 +3,7 @@ from typing import Any
 from pathlib import Path
 import os
 import site
+import logging
 
 # Note: these are imports from pyusb
 import usb.core
@@ -10,6 +11,8 @@ import usb.backend.libusb1
 
 import re
 import platform
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -193,13 +196,13 @@ def parse_bus_and_address(text: str) -> tuple[int | None, int | None]:
             try:
                 bus = int(tmp_match_bus.groups()[0])
             except ValueError:
-                print("Unable to get a bus in utility get_usb_ports")
+                logger.warning("Failed to parse bus number from USB string: %s", text)
 
     if tmp_match_address:
         if len(tmp_match_address.groups()) == 1:
             try:
                 address = int(tmp_match_address.groups()[0])
             except ValueError:
-                print("Unable to get a bus in utility get_usb_ports")
+                logger.warning("Failed to parse address from USB string: %s", text)
 
     return bus, address

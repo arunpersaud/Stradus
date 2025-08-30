@@ -11,6 +11,8 @@ import time
 
 from .usb import VortranDevice, get_usb_backend
 
+logger = logging.getLogger(__name__)
+
 
 class USB_ReadWrite:
     SET_CMD_QUERY = bytes([0xA0])
@@ -104,15 +106,21 @@ class USB_ReadWrite:
                         self.logger.log.info(msg_out)
 
             except Exception as e:
-                print(repr(e))
+                logger.error("USB connection failed: %s", repr(e))
                 if self.logger:
                     self.logger.log.error(repr(e))
 
                 num_attempts += 1
                 if num_attempts <= self.retries:
-                    msg_out = "Retrying connection to USB Vendor_ID={self.vendor_id}, Product_ID={self.product_id}. Attempt {num_attempts} of {self.retries}"
-                    print(msg_out)
+                    logger.warning(
+                        "Retrying USB connection (Vendor=%04x, Product=%04x). Attempt %d of %d",
+                        self.vendor_id,
+                        self.product_id,
+                        num_attempts,
+                        self.retries,
+                    )
                     if self.logger:
+                        msg_out = f"Retrying connection to USB Vendor_ID={self.vendor_id}, Product_ID={self.product_id}. Attempt {num_attempts} of {self.retries}"
                         self.logger.log.warning(msg_out)
         return is_connection_open
 
@@ -120,7 +128,7 @@ class USB_ReadWrite:
         try:
             data = self.connection.read(0x81, 64, timeout)
         except usb.core.USBError as e:
-            print(f"Error reading response: {e.args}: {str(timeout)}")
+            logger.error("USB read error (timeout=%s): %s", timeout, e.args)
             return None
 
         if include_first_byte:
@@ -180,4 +188,4 @@ class USB_ReadWrite:
                 return response
 
         except usb.core.USBError as e:
-            print(repr(e.args))
+            logger.error("USB communication error: %s", repr(e.args))

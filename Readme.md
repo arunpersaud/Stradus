@@ -31,6 +31,53 @@ time.sleep(1)
 laser.off()
 ```
 
+## Logging Configuration
+
+The vortran library uses Python's standard logging module. By default, no log messages are shown. To see log output, configure logging in your application:
+
+### Basic Logging Setup
+
+```python
+import logging
+import vortran
+
+# Show INFO level and above (device discovery, connections)
+logging.basicConfig(level=logging.INFO)
+
+# Or show DEBUG level for detailed USB communication
+logging.basicConfig(level=logging.DEBUG)
+
+lasers = vortran.get_lasers()  # Will now show log messages
+```
+
+### Advanced Logging Configuration
+
+```python
+import logging
+import vortran
+
+# Configure specific logger levels
+logging.getLogger('vortran.usb').setLevel(logging.INFO)      # USB device discovery
+logging.getLogger('vortran.laser').setLevel(logging.DEBUG)   # Laser operations
+logging.getLogger('vortran.usb_connection').setLevel(logging.WARNING)  # Only errors
+
+# Custom formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+
+logger = logging.getLogger('vortran')
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
+```
+
+### Log Levels
+
+- **DEBUG**: Detailed USB communication, retry attempts
+- **INFO**: Device discovery, connection status
+- **WARNING**: Parse errors, failed operations with retries
+- **ERROR**: Connection failures, USB communication errors
+
 ## Configuration
 
 ### USB Library Configuration (Windows only)

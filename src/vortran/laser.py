@@ -1,9 +1,12 @@
 from enum import IntFlag
 from typing import Any
+import logging
 
 from .usb_connection import USB_ReadWrite
 from .usb import get_usb_ports, VortranDevice
 from .parser import parse_output, verify_result
+
+logger = logging.getLogger(__name__)
 
 
 class LaserStatus(IntFlag):
@@ -197,7 +200,7 @@ class Laser(USB_ReadWrite):
         if (result is not None) and (verify_result(result, verify_list) == True):
             data = result
         else:  # if result is None or not verified, ask again
-            print("trying second query")
+            logger.debug("Query failed, trying second attempt for command: %s", command)
             second_try = self.send_usb(command)
             if (second_try is not None) and (
                 verify_result(second_try, verify_list) == True
@@ -225,7 +228,7 @@ def get_lasers() -> list[Laser]:
                 manager = device
             else:
                 lasers.append(device)
-                print("Attaching Endpoint", device)
+                logger.info("Found laser device: %s", device)
 
     my_timeout = 500
     my_retries = 0
