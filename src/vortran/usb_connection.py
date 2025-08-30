@@ -136,7 +136,7 @@ class USB_ReadWrite:
     def read_usb(self, timeout: int, include_first_byte: bool = False) -> str | None:
         try:
             data = self.connection.read(0x81, 64, timeout)
-        except usb.core.USBError:
+        except usb.core.USBError as e:
             print(f"Error reading response: {e.args}: {str(timeout)}")
             return None
 
