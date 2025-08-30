@@ -73,13 +73,29 @@ pip install libusb
 
 ## Development
 
-If you want to contribute, please install and use `pre-commit`.
+### Running Tests
 
-You can do this by doing
+Install test dependencies:
+```bash
+uv pip install -e ".[test]"
+```
 
-    uv pip install pre-commit
+Run tests:
+```bash
+pytest
+```
 
-and then running the following command inside the git repo
+Run tests with coverage:
+```bash
+pytest --cov=src/vortran --cov-report=term-missing
+```
 
-    pre-commit install
+### Contributing
+
+If you want to contribute, please install and use `pre-commit`:
+
+```bash
+uv pip install pre-commit
+pre-commit install
+```
 
