@@ -135,7 +135,7 @@ class Laser(USB_ReadWrite):
         return parse_output(self.send_query("?FD"))
 
     @property
-    def firmware_protocal(self) -> list[str] | None:
+    def firmware_protocol(self) -> list[str] | None:
         return parse_output(self.send_query("?FP"))
 
     @property
