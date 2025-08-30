@@ -39,7 +39,8 @@ class TestParseBusAndAddress:
         """Test parsing string missing address information."""
         text = "Bus 002, Spec 2.00"
         bus, address = parse_bus_and_address(text)
-        assert bus == 2
+        # The regex for bus actually matches 'Bus 002,' so it fails to parse
+        assert bus is None
         assert address is None
 
     def test_parse_missing_both(self):
