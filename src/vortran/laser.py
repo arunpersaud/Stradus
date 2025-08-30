@@ -39,7 +39,6 @@ class Laser(USB_ReadWrite):
 
     @property
     def control_mode(self):
-        # self.send_usb("?C")
         return parse_output(self.send_query("?C"))
 
     def enable_delay(self):
@@ -50,7 +49,6 @@ class Laser(USB_ReadWrite):
 
     @property
     def delay(self):
-        # self.send_usb("?DELAY")
         return parse_output(self.send_query("?DELAY"))
 
     def enable_external_power_control(self):
@@ -61,12 +59,10 @@ class Laser(USB_ReadWrite):
 
     @property
     def external_power_control(self):
-        # self.send_usb("?EPC")
         return parse_output(self.send_query("?EPC"))
 
     @property
     def current(self):
-        # self.send_usb("?LC")
         return parse_output(self.send_query("?LC"))
 
     @current.setter
@@ -81,26 +77,23 @@ class Laser(USB_ReadWrite):
 
     @property
     def on_off(self):
-        self.send_usb("?LE")
         return parse_output(self.send_query("?LE"))
 
     @property
     def power(self):
-        # self.send_usb("?LP")
-        return parse_output(self.send_query("?C"))
+        return parse_output(self.send_query("?LP"))
 
     @power.setter
     def power(self, value):
-        self.send_usb("LP={value:05.1f}")
+        self.send_usb(f"LP={value:05.1f}")
 
     @property
     def pulse_power(self):
-        # self.send_usb("?PP")
         return parse_output(self.send_query("?PP"))
 
     @pulse_power.setter
     def pulse_power(self, value):
-        self.send_usb("PP={value:05.1f}")
+        self.send_usb(f"PP={value:05.1f}")
 
     def disable_pulsed_power(self):
         self.send_usb("PUL=0")
@@ -110,17 +103,14 @@ class Laser(USB_ReadWrite):
 
     @property
     def pulsed_power(self):
-        # self.send_usb("?PUL")
         return parse_output(self.send_query("?PUL"))
 
     @property
     def base_plate_temperature(self):
-        # self.send_usb("?BPT")
         return parse_output(self.send_query("?BPT"))
 
     @property
     def computer_control(self):
-        # self.send_usb("?CC")
         return parse_output(self.send_query("?CC"))
 
     @property
@@ -142,64 +132,52 @@ class Laser(USB_ReadWrite):
 
     @property
     def fault_text(self):
-        # self.send_usb("?FD")
         return parse_output(self.send_query("?FD"))
 
     @property
     def firmware_protocal(self):
-        # self.send_usb("?FP")
         return parse_output(self.send_query("?FP"))
 
     @property
     def firmware_version(self):
-        # self.send_usb("?FV")
         return parse_output(self.send_query("?FV"))
 
     @property
     def interlock_status(self):
-        # self.send_usb("?IL")
         return parse_output(self.send_query("?IL"))
 
     @property
     def laser_hours(self):
-        # self.send_usb("?LH")
         return parse_output(self.send_query("?LH"))
 
     @property
     def laser_id(self):
-        # self.send_usb("?LI")
         return parse_output(self.send_query("?LI"))
 
     @property
     def laser_power_setting(self):
-        # self.send_usb("?LPS")
         return parse_output(self.send_query("?LPS"))
 
     @property
     def laser_status(self):
-        # self.send_usb("?LS")
         return parse_output(
             self.send_query("?LS", alt_list=["?C", "?LPS", "?LCS", "?EPC", "?DELAY"])
         )
 
     @property
     def laser_wavelength(self):
-        # self.send_usb("?LW")
         return parse_output(self.send_query("?LW"))
 
     @property
     def laser_max_power(self):
-        # self.send_usb("?MAXP")
         return parse_output(self.send_query("?MAXP"))
 
     @property
     def optical_block_temperature(self):
-        # self.send_usb("?OBT")
         return parse_output(self.send_query("?OBT"))
 
     @property
     def rated_power(self):
-        # self.send_usb("?RP")
         return parse_output(self.send_query("?RP"))
 
     def send_query(self, command: str, alt_list: list[str] = []) -> str | None:
