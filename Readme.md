@@ -31,6 +31,31 @@ time.sleep(1)
 laser.off()
 ```
 
+## Configuration
+
+### Custom USB Library Path (Windows only)
+
+If you need to use a custom libusb library location, you can set the `VORTRAN_LIBUSB_PATH` environment variable:
+
+**Linux/macOS (bash):**
+```bash
+export VORTRAN_LIBUSB_PATH="/path/to/your/libusb-1.0.dll"
+```
+
+**Windows (PowerShell):**
+```powershell
+$env:VORTRAN_LIBUSB_PATH = "C:\path\to\your\libusb-1.0.dll"
+```
+
+**Windows (Command Prompt):**
+```cmd
+set VORTRAN_LIBUSB_PATH=C:\path\to\your\libusb-1.0.dll
+```
+
+If not set, the library will use default paths based on your system architecture:
+- 32-bit: `USB/libusb/x86/libusb-1.0.dll`
+- 64-bit: `USB/libusb/x64/libusb-1.0.dll`
+
 ## Development
 
 If you want to contribute, please install and use `pre-commit`.

@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
+from pathlib import Path
+import os
 
 # Note: these are imports from pyusb
 import usb.core
@@ -23,24 +25,40 @@ class VortranDevice:
 def get_usb_backend() -> Any | None:
     """Get the appropriate USB backend for the current platform.
 
+    Uses VORTRAN_LIBUSB_PATH environment variable if set,
+    otherwise falls back to default paths.
+
     Returns the libusb backend for Windows, None for other platforms
     to use the default backend.
     """
     if platform.system() == "Windows":
+        # Check for custom path first
+        custom_path = os.getenv("VORTRAN_LIBUSB_PATH")
+        if custom_path:
+            lib_path = Path(custom_path)
+            if not lib_path.exists():
+                raise FileNotFoundError(f"Custom libusb library not found: {lib_path}")
+            return usb.backend.libusb1.get_backend(find_library=lambda x: str(lib_path))
+
+        # Default paths with validation
         # libusb DLLs from: https://sourceforge.net/projects/libusb/
         arch = platform.architecture()
         if arch[0] == "32bit":
-            return usb.backend.libusb1.get_backend(
-                find_library=lambda x: "USB/libusb/x86/libusb-1.0.dll"
-            )
+            default_path = Path("USB/libusb/x86/libusb-1.0.dll")
         elif arch[0] == "64bit":
-            return usb.backend.libusb1.get_backend(
-                find_library=lambda x: "USB/libusb/x64/libusb-1.0.dll"
-            )
+            default_path = Path("USB/libusb/x64/libusb-1.0.dll")
         else:
             raise Exception(
                 "Invalid platform. System must be a 32bit or 64bit architecture."
             )
+
+        if not default_path.exists():
+            raise FileNotFoundError(
+                f"Default libusb library not found: {default_path}. "
+                f"Set VORTRAN_LIBUSB_PATH environment variable to specify custom path."
+            )
+
+        return usb.backend.libusb1.get_backend(find_library=lambda x: str(default_path))
     return None
 
 
