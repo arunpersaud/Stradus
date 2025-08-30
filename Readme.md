@@ -33,9 +33,15 @@ laser.off()
 
 ## Configuration
 
-### Custom USB Library Path (Windows only)
+### USB Library Configuration (Windows only)
 
-If you need to use a custom libusb library location, you can set the `VORTRAN_LIBUSB_PATH` environment variable:
+The library automatically finds libusb in this order:
+
+1. **Custom path** via `VORTRAN_LIBUSB_PATH` environment variable
+2. **libusb package** installed via pip (`pip install libusb`)
+3. **Default relative paths** in your project directory
+
+#### Setting Custom Path
 
 **Linux/macOS (bash):**
 ```bash
@@ -52,9 +58,18 @@ $env:VORTRAN_LIBUSB_PATH = "C:\path\to\your\libusb-1.0.dll"
 set VORTRAN_LIBUSB_PATH=C:\path\to\your\libusb-1.0.dll
 ```
 
-If not set, the library will use default paths based on your system architecture:
+#### Default Paths
+
+If no custom path is set and libusb package is not installed, the library looks for:
 - 32-bit: `USB/libusb/x86/libusb-1.0.dll`
 - 64-bit: `USB/libusb/x64/libusb-1.0.dll`
+
+#### Recommended Setup
+
+For easiest setup, simply install the libusb package:
+```bash
+pip install libusb
+```
 
 ## Development
 

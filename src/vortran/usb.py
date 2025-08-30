@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 from pathlib import Path
 import os
+import site
 
 # Note: these are imports from pyusb
 import usb.core
@@ -22,17 +23,49 @@ class VortranDevice:
     is_manager: bool = False
 
 
+def _find_libusb_in_site_packages() -> Path | None:
+    """Find libusb library in site-packages directory.
+
+    Returns the path to libusb library if found, None otherwise.
+    """
+    # Get all site-packages directories
+    site_packages = site.getsitepackages()
+    if hasattr(site, "getusersitepackages"):
+        site_packages.append(site.getusersitepackages())
+
+    # Platform-specific library paths within libusb package
+    if platform.system() == "Windows":
+        arch = platform.architecture()
+        if arch[0] == "32bit":
+            lib_subpath = "libusb/_platform/_windows/x86/libusb-1.0.dll"
+        elif arch[0] == "64bit":
+            lib_subpath = "libusb/_platform/_windows/x64/libusb-1.0.dll"
+        else:
+            return None
+
+        # Search in all site-packages directories
+        for site_pkg in site_packages:
+            if site_pkg:  # site_pkg could be None
+                lib_path = Path(site_pkg) / lib_subpath
+                if lib_path.exists():
+                    return lib_path
+
+    return None
+
+
 def get_usb_backend() -> Any | None:
     """Get the appropriate USB backend for the current platform.
 
-    Uses VORTRAN_LIBUSB_PATH environment variable if set,
-    otherwise falls back to default paths.
+    Tries paths in this order:
+    1. VORTRAN_LIBUSB_PATH environment variable
+    2. libusb package in site-packages
+    3. Default relative paths
 
     Returns the libusb backend for Windows, None for other platforms
     to use the default backend.
     """
     if platform.system() == "Windows":
-        # Check for custom path first
+        # 1. Check for custom path first
         custom_path = os.getenv("VORTRAN_LIBUSB_PATH")
         if custom_path:
             lib_path = Path(custom_path)
@@ -40,7 +73,14 @@ def get_usb_backend() -> Any | None:
                 raise FileNotFoundError(f"Custom libusb library not found: {lib_path}")
             return usb.backend.libusb1.get_backend(find_library=lambda x: str(lib_path))
 
-        # Default paths with validation
+        # 2. Try libusb package in site-packages
+        site_lib_path = _find_libusb_in_site_packages()
+        if site_lib_path:
+            return usb.backend.libusb1.get_backend(
+                find_library=lambda x: str(site_lib_path)
+            )
+
+        # 3. Default paths with validation
         # libusb DLLs from: https://sourceforge.net/projects/libusb/
         arch = platform.architecture()
         if arch[0] == "32bit":
@@ -54,8 +94,11 @@ def get_usb_backend() -> Any | None:
 
         if not default_path.exists():
             raise FileNotFoundError(
-                f"Default libusb library not found: {default_path}. "
-                f"Set VORTRAN_LIBUSB_PATH environment variable to specify custom path."
+                f"libusb library not found. Tried:\n"
+                f"- Environment variable: VORTRAN_LIBUSB_PATH\n"
+                f"- Site-packages: libusb package\n"
+                f"- Default path: {default_path}\n"
+                f"Install libusb package or set VORTRAN_LIBUSB_PATH environment variable."
             )
 
         return usb.backend.libusb1.get_backend(find_library=lambda x: str(default_path))

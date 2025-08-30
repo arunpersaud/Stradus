@@ -23,6 +23,7 @@ classifiers = [
 
 dependencies = [
   "pyusb",
+  "libusb",
 ]
 
 [tool.setuptools.packages.find]
