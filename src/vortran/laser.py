@@ -199,10 +199,10 @@ class Laser(USB_ReadWrite):
         else:  # if result is None or not verified, ask again
             print("trying second query")
             second_try = self.send_usb(command)
-            if (result is not None) and (
+            if (second_try is not None) and (
                 verify_result(second_try, verify_list) == True
             ):
-                data = result
+                data = second_try
             else:
                 data = None
 
