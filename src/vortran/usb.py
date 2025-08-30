@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 # Note: these are imports from pyusb
 import usb.core
@@ -19,6 +20,30 @@ class VortranDevice:
     is_manager: bool = False
 
 
+def get_usb_backend() -> Any | None:
+    """Get the appropriate USB backend for the current platform.
+
+    Returns the libusb backend for Windows, None for other platforms
+    to use the default backend.
+    """
+    if platform.system() == "Windows":
+        # libusb DLLs from: https://sourceforge.net/projects/libusb/
+        arch = platform.architecture()
+        if arch[0] == "32bit":
+            return usb.backend.libusb1.get_backend(
+                find_library=lambda x: "USB/libusb/x86/libusb-1.0.dll"
+            )
+        elif arch[0] == "64bit":
+            return usb.backend.libusb1.get_backend(
+                find_library=lambda x: "USB/libusb/x64/libusb-1.0.dll"
+            )
+        else:
+            raise Exception(
+                "Invalid platform. System must be a 32bit or 64bit architecture."
+            )
+    return None
+
+
 def get_usb_ports() -> dict[str, VortranDevice]:
     """Find all usb lasers."""
 
@@ -32,21 +57,7 @@ def get_usb_ports() -> dict[str, VortranDevice]:
     found_vortran_devices = dict()
 
     # DETERMINE BACKEND
-    if platform.system() == "Windows":
-        # libusb DLLs from: https://sourcefore.net/projects/libusb/
-        arch = platform.architecture()
-        if arch[0] == "32bit":
-            usb.backend.libusb1.get_backend(
-                find_library=lambda x: "USB/libusb/x86/libusb-1.0.dll"
-            )  # 32-bit DLL, pick right one based on Python installation
-        elif arch[0] == "64bit":
-            usb.backend.libusb1.get_backend(
-                find_library=lambda x: "USB/libusb/x64/libusb-1.0.dll"
-            )  # 64-bit DLL
-        else:
-            raise Exception(
-                "Invalid platform. System must be a 32bit or 64bit architecture."
-            )
+    backend = get_usb_backend()
 
     # FIND MANAGERS
     found_info = usb.core.show_devices(

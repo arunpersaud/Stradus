@@ -9,7 +9,7 @@ import array
 import logging
 import time
 
-from .usb import VortranDevice
+from .usb import VortranDevice, get_usb_backend
 
 
 class USB_ReadWrite:
@@ -66,22 +66,9 @@ class USB_ReadWrite:
 
         while not is_connection_open and num_attempts <= self.retries:
             try:
-                # WINDOWS
-                if platform.system() == "Windows":
-                    arch = platform.architecture()
-                    if arch[0] == "32bit":
-                        backend = usb.backend.libusb1.get_backend(
-                            find_library=lambda: "USB/libusb/x86/libusb-1.0.dll"
-                        )
-                    elif arch[0] == "64bit":
-                        backend = usb.backend.libusb1.get_backend(
-                            find_library=lambda: "USB/libusb/x64/libusb-1.0.dll"
-                        )
-                    else:
-                        raise Exception(
-                            "Invalid platform. System must be a 32bit or 64bit architecture."
-                        )
+                backend = get_usb_backend()
 
+                if backend:
                     self.connection = usb.core.find(
                         backend=backend,
                         idVendor=self.vendor_id,
@@ -89,15 +76,6 @@ class USB_ReadWrite:
                         bus=self.bus,
                         address=self.address,
                     )
-                elif platform.system() == "Linux":
-                    self.connection = usb.core.find(
-                        idVendor=self.vendor_id,
-                        idProduct=self.product_id,
-                        bus=self.bus,
-                        address=self.address,
-                    )
-                    if self.connection.is_kernel_driver_active(0):
-                        self.connection.detach_kernel_driver(0)
                 else:
                     self.connection = usb.core.find(
                         idVendor=self.vendor_id,
@@ -105,6 +83,11 @@ class USB_ReadWrite:
                         bus=self.bus,
                         address=self.address,
                     )
+
+                # Linux-specific kernel driver handling
+                if platform.system() == "Linux" and self.connection:
+                    if self.connection.is_kernel_driver_active(0):
+                        self.connection.detach_kernel_driver(0)
 
                 if self.connection is None:
                     raise ValueError
