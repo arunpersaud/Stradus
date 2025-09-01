@@ -41,8 +41,11 @@ class Laser(USB_ReadWrite):
         self.send_usb("C=1")
 
     @property
-    def control_mode(self) -> list[str] | None:
-        return parse_output(self.send_query("?C"))
+    def control_mode(self) -> bool | None:
+        mode = parse_output(self.send_query("?C"))
+        if mode:
+            mode = bool(mode[0])
+        return mode
 
     def enable_delay(self) -> None:
         self.send_usb("DELAY=0")
@@ -65,8 +68,11 @@ class Laser(USB_ReadWrite):
         return parse_output(self.send_query("?EPC"))
 
     @property
-    def current(self) -> list[str] | None:
-        return parse_output(self.send_query("?LC"))
+    def current(self) -> float | None:
+        curent = parse_output(self.send_query("?LC"))
+        if current:
+            current = float(current[0])
+        return current
 
     @current.setter
     def current(self, value: float) -> None:
@@ -79,20 +85,29 @@ class Laser(USB_ReadWrite):
         self.send_usb("LE=0")
 
     @property
-    def on_off(self) -> list[str] | None:
-        return parse_output(self.send_query("?LE"))
+    def on_off(self) -> bool | None:
+        on_off = parse_output(self.send_query("?LE"))
+        if on_off:
+            on_off = bool(on_off[0])
+        return on_off
 
     @property
-    def power(self) -> list[str] | None:
-        return parse_output(self.send_query("?LP"))
+    def power(self) -> float | None:
+        power = parse_output(self.send_query("?LP"))
+        if power:
+            power = float(power[0])
+        return power
 
     @power.setter
     def power(self, value: float) -> None:
         self.send_usb(f"LP={value:05.1f}")
 
     @property
-    def pulse_power(self) -> list[str] | None:
-        return parse_output(self.send_query("?PP"))
+    def pulse_power(self) -> float | None:
+        pulse_power = parse_output(self.send_query("?PP"))
+        if pulse_power:
+            pulse_power = float(pulse_power[0])
+        return pulse_power
 
     @pulse_power.setter
     def pulse_power(self, value: float) -> None:
@@ -105,12 +120,18 @@ class Laser(USB_ReadWrite):
         self.send_usb("PUL=1")
 
     @property
-    def pulsed_power(self) -> list[str] | None:
-        return parse_output(self.send_query("?PUL"))
+    def pulsed_power(self) -> float | None:
+        pulsed_power = parse_output(self.send_query("?PUL"))
+        if pulsed_power:
+            pulsed_power = float(pulsed_power[0])
+        return pulsed_power
 
     @property
-    def base_plate_temperature(self) -> list[str] | None:
-        return parse_output(self.send_query("?BPT"))
+    def base_plate_temperature(self) -> float | None:
+        temp = parse_output(self.send_query("?BPT"))
+        if temp:
+            temp = float(temp[0])
+        return temp
 
     @property
     def computer_control(self) -> list[str] | None:
@@ -150,16 +171,22 @@ class Laser(USB_ReadWrite):
         return parse_output(self.send_query("?IL"))
 
     @property
-    def laser_hours(self) -> list[str] | None:
-        return parse_output(self.send_query("?LH"))
+    def laser_hours(self) -> float | None:
+        hours = parse_output(self.send_query("?LH"))
+        if hours:
+            hours = float(hours[0])
+        return hours
 
     @property
     def laser_id(self) -> list[str] | None:
         return parse_output(self.send_query("?LI"))
 
     @property
-    def laser_power_setting(self) -> list[str] | None:
-        return parse_output(self.send_query("?LPS"))
+    def laser_power_setting(self) -> float | None:
+        power = parse_output(self.send_query("?LPS"))
+        if power:
+            power = float(power[0])
+        return power
 
     @property
     def laser_status(self) -> list[str] | None:
@@ -168,20 +195,29 @@ class Laser(USB_ReadWrite):
         )
 
     @property
-    def laser_wavelength(self) -> list[str] | None:
-        return parse_output(self.send_query("?LW"))
+    def laser_wavelength(self) -> float | None:
+        wavelength = parse_output(self.send_query("?LW"))
+        if wavelength:
+            wavelength = float(wavelength[0])
+        return wavelength
 
     @property
-    def laser_max_power(self) -> list[str] | None:
-        return parse_output(self.send_query("?MAXP"))
+    def laser_max_power(self) -> float | None:
+        power = parse_output(self.send_query("?MAXP"))
+        if power:
+            power = float(power[0])
+        return power
 
     @property
     def optical_block_temperature(self) -> list[str] | None:
         return parse_output(self.send_query("?OBT"))
 
     @property
-    def rated_power(self) -> list[str] | None:
-        return parse_output(self.send_query("?RP"))
+    def rated_power(self) -> float | None:
+        power = parse_output(self.send_query("?RP"))
+        if power:
+            power = float(power[0])
+        return power
 
     def send_query(self, command: str, alt_list: list[str] = []) -> str | None:
         """Sends a query command to the laser and returns the
@@ -195,16 +231,12 @@ class Laser(USB_ReadWrite):
         else:
             verify_list = alt_list
 
-        # print(result)
-        # print(alt_list)
-        if (result is not None) and (verify_result(result, verify_list) == True):
+        if (result is not None) and verify_result(result, verify_list):
             data = result
         else:  # if result is None or not verified, ask again
             logger.debug("Query failed, trying second attempt for command: %s", command)
             second_try = self.send_usb(command)
-            if (second_try is not None) and (
-                verify_result(second_try, verify_list) == True
-            ):
+            if (second_try is not None) and verify_result(second_try, verify_list):
                 data = second_try
             else:
                 data = None
