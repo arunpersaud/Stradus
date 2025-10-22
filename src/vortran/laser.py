@@ -48,10 +48,10 @@ class Laser(USB_ReadWrite):
         return mode
 
     def enable_delay(self) -> None:
-        self.send_usb("DELAY=0")
+        self.send_usb("DELAY=1")
 
     def disable_delay(self) -> None:
-        self.send_usb("DELAY=1")
+        self.send_usb("DELAY=0")
 
     @property
     def delay(self) -> list[str] | None:
